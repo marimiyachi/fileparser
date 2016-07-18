@@ -26,3 +26,5 @@ Data will be populated in the sqlite db under a table that matches your spec fil
 * better integer/text type checking
 * better format checking if data does not match spec
 * add csv/txt extension checks
+* sqlite library doesn't quite support the query flexibility needed here - so investigate using a different db
+* break out database logic into a seperate class

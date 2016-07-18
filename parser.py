@@ -10,7 +10,7 @@ class Parser:
         conn (obj): database connection.
         cursor (obj): controls database executions.
 
-    """
+  """
 
 	def __init__(self, database='fileparser.db', datapath='./resources/data/', specspath='./resources/specs/'):
 		self.specspath = specspath
@@ -27,12 +27,12 @@ class Parser:
 		Raises:
         	Exception: if specified datatype is not supported. 
 
-        """
+    """
 		for filename in os.listdir(self.specspath):
-			tablename = os.path.splitext(filename)[0]
+			tablename = os.path.splitext(filename)[0] # expect format {tablename}.csv
 			self.table_column_lengths[tablename] = []
 			columns = []
-			with open(self.specspath+filename) as csvfile:
+			with open(os.path.join(self.specspath,filename)) as csvfile:
 				reader = csv.reader(csvfile)
 				next(reader, None) # skip the header
 				for row in reader:
@@ -58,14 +58,14 @@ class Parser:
 		Fails on a per-file basis if values in a BOOLEAN column are not 0 or 1 value.
 		This is a Sqlite-specific implementation. 
 
-        """
+    """
 		for filename in os.listdir(self.datapath):
-			lines = open(self.datapath+filename).readlines()
+			lines = open(os.path.join(self.datapath,filename)).readlines()
 
 			values = []
-			tablename = os.path.splitext(filename)[0].split("_")[0]
+			tablename = os.path.splitext(filename)[0].split("_")[0] # expect format {tablename}_{date}.txt
 
-			fmtstring = ' '.join('{}{}'.format(abs(fw), 's') for fw in self.table_column_lengths[tablename])
+			fmtstring = ' '.join('{}{}'.format(fw, 's') for fw in self.table_column_lengths[tablename])
 			fieldstruct = struct.Struct(fmtstring)
 
 			for l in lines:
@@ -73,8 +73,8 @@ class Parser:
 				values.append(fields)
 
 			try:
-				field_query = "?,"*len(self.table_column_lengths[tablename])
-				self.cursor.executemany("insert into {} values ({})".format(tablename, field_query[:-1]), values)
+				field_query = ','.join(['?']*len(self.table_column_lengths[tablename]))
+				self.cursor.executemany("insert into {} values ({})".format(tablename, field_query), values)
 				self.conn.commit()
 			except sqlite3.IntegrityError:
 				# BOOLEAN datatype values need to be 0 or 1
